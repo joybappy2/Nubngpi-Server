@@ -61,8 +61,14 @@ async function run() {
         const db_student = await studentsCollection.findOne({ roll: roll });
 
         browser = await puppeteer.launch({
-          headless: "new",
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          headless: "new", // or true
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null, // Helpful if you use a buildpack
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage", // Highly recommended for cloud environments
+            "--single-process", // Reduces memory usage
+          ],
         });
         const page = await browser.newPage();
 
