@@ -1,9 +1,11 @@
 const express = require("express");
-const port = process.env.PORT || 3000;
 const app = express();
 require("dotenv").config();
+const port = process.env.PORT || 3000;
 const cors = require("cors");
 const puppeteer = require("puppeteer");
+// Add this right after your imports, before app.use()
+const isDev = process.env.NODE_ENV !== "production";
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
 app.use(express.json());
@@ -29,7 +31,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
     const db = client.db("Nubngpi_DB");
     const studentsCollection = db.collection("students");
 
@@ -61,14 +62,18 @@ async function run() {
         const db_student = await studentsCollection.findOne({ roll: roll });
 
         browser = await puppeteer.launch({
-          headless: "new", // or true
-          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null, // Helpful if you use a buildpack
+          headless: true, // Changed from "new" to true
           args: [
             "--no-sandbox",
             "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage", // Highly recommended for cloud environments
-            "--single-process", // Reduces memory usage
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--disable-features=IsolateOrigins,site-per-process",
+            "--disable-blink-features=AutomationControlled",
           ],
+          executablePath:
+            process.env.PUPPETEER_EXECUTABLE_PATH ||
+            (isDev ? puppeteer.executablePath() : "/usr/bin/chromium-browser"),
         });
         const page = await browser.newPage();
 
